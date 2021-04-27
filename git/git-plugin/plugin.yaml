@@ -1,0 +1,86 @@
+name: git-plugin
+version: 2.0.0
+rundeckPluginVersion: 1.2
+author: Diego Maia
+date: Tue Jan 2021
+providers:
+  - name: git_clone
+    service: WorkflowStep
+    title: 'Git / Clone'
+    description: 'Clone a Git repository on Rundeck server.'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: git-clone
+    script-args: ${config.source} ${config.destination}
+    config:       
+      - type: String
+        name: git_repo_local_dir
+        title: Base Directory
+        required: true
+        description: 'Directory for checkout.'  
+      - type: Select
+        name: git_override_local_dir
+        title: Override local dir
+        description: "When set to true, it replaces the existing destination path."
+        values: "true, false"
+        default: "false"
+        required: true  
+      - type: String
+        name: git_url
+        title: Git URL
+        required: true
+        description: 'Checkout url.'
+      - type: String
+        name: git_branch
+        title: Branch
+        required: true
+        description: 'Checkout branch.' 
+      - type: String
+        name: git_ssh_key
+        title: SSH Key Path
+        required: true
+        description: 'SSH Key Path'
+        renderingOptions:
+          grouping: secondary
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"   
+  - name: git_push
+    service: WorkflowStep
+    title: 'Git / Commit and Push'
+    description: 'Commit and Push to git repo.'
+    plugin-type: script
+    script-interpreter: python -u
+    script-file: git-push
+    script-args: ${config.source} ${config.destination}
+    config:       
+      - type: String
+        name: git_repo_local_dir
+        title: Base Directory
+        required: true
+        description: 'Directory for checkout.'  
+      - type: String
+        name: git_url
+        title: Git URL
+        required: true
+        description: 'Git Url to commit and push.'
+      - type: String
+        name: git_commit_message
+        title: Commit message
+        default: "Commit by rundeck automation [$RD_JOB_NAME]" 
+        required: true
+        description: 'Git commit message.'
+      - type: String
+        name: git_ssh_key
+        title: SSH Key Path
+        required: true
+        description: 'SSH Key Path'
+        renderingOptions:
+          grouping: secondary
+          groupName: Authentication
+          selectionAccessor: "STORAGE_PATH"
+          valueConversion: "STORAGE_PATH_AUTOMATIC_READ"
+          storage-path-root: "keys"
+    
+

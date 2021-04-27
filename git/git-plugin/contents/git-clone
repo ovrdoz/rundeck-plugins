@@ -1,0 +1,52 @@
+#!/usr/bin/env python
+# git-clone
+
+# required 
+# pip install gitpython==2.1.15
+
+import os,sys
+from git import Git,Repo
+from shutil import rmtree
+
+
+GIT_URL = os.getenv("RD_CONFIG_GIT_URL")
+GIT_BRANCH = os.getenv("RD_CONFIG_GIT_BRANCH")
+GIT_REPO_LOCAL_DIR = os.getenv("RD_CONFIG_GIT_REPO_LOCAL_DIR")
+GIT_SSH_KEY = os.getenv("RD_CONFIG_GIT_SSH_KEY")
+GIT_OVERRIDE_LOCAL_DIR = os.getenv("RD_CONFIG_GIT_OVERRIDE_LOCAL_DIR")
+
+def main():
+    try:
+        if GIT_OVERRIDE_LOCAL_DIR and os.path.isdir(GIT_REPO_LOCAL_DIR):
+            rmtree(GIT_REPO_LOCAL_DIR)
+        else:
+            if os.path.isdir(GIT_REPO_LOCAL_DIR):
+                print >>sys.stderr, "Error: Destination path ["+GIT_REPO_LOCAL_DIR+"] already exists and is not an empty directory."
+                sys.exit(1)
+
+        git_ssh_identity_file = os.path.expanduser(GIT_SSH_KEY).replace('\r\n', os.linesep)
+        f = open("/tmp/.tmp_k", "w")
+        f.write(git_ssh_identity_file+'\n')
+        f.close()
+        os.chmod("/tmp/.tmp_k", 0o400)
+
+        git_ssh_cmd = 'ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -i /tmp/.tmp_k' 
+
+        if "RD_CONFIG_GIT_BRANCH" not in os.environ:
+            print('Cloning with the branch ['+GIT_BRANCH+']')
+            Repo.clone_from(GIT_URL, GIT_REPO_LOCAL_DIR,GIT_BRANCH,env=dict(GIT_SSH_COMMAND=git_ssh_cmd))
+        else:
+            Repo.clone_from(GIT_URL, GIT_REPO_LOCAL_DIR,env=dict(GIT_SSH_COMMAND=git_ssh_cmd))
+        
+        print('Clone process complete ')
+        print('Git URL: '+GIT_URL)
+
+    except OSError as e:
+        print >>sys.stderr, "Error:", e
+        sys.exit(1)
+
+    finally:
+        os.remove('/tmp/.tmp_k')
+
+if __name__ == '__main__':
+    main()
